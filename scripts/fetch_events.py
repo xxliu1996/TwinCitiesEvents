@@ -19,6 +19,7 @@ KIDS_KEYWORDS = [
     "child ", "family storytime", "family fun", "preschool", "toddler",
     "baby", "babies", "teen ", "teens", "tween", "youth ", "school age",
     "read with", "dungeons & dragons for teens", "mario mondays",
+    "steam saturday", "design-a-game",
 ]
 ADULT_HINT_KEYWORDS = ["adult", "21+", "wine", "beer", "cocktail", "happy hour"]
 
@@ -133,7 +134,15 @@ def fetch_eventbrite(now, horizon, max_pages=2):
                     continue
                 if not passes_time_rule(start_dt):
                     continue
-                venue = (ev.get("primary_venue") or {}).get("name", "")
+                primary_venue = ev.get("primary_venue") or {}
+                venue = primary_venue.get("name", "")
+                region = (primary_venue.get("address") or {}).get("region", "")
+                # The Minneapolis events feed occasionally includes
+                # out-of-state promoted listings (e.g. eventbrite.co.uk
+                # entries with no real venue); require a Minnesota address.
+                if region.strip().upper() != "MN":
+                    print(f"WARN: dropped non-MN Eventbrite listing: {title!r} (region={region!r})", file=sys.stderr)
+                    continue
                 events.append({
                     "title": title,
                     "start": start_dt.isoformat(),

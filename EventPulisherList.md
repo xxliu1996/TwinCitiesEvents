@@ -16,4 +16,33 @@ Removed (unscrapable, verified 2026-07-18):
 - Twin Cities AI Tinkerers (direct fetch 403s; no reliable structured endpoint found)
 - Saint Paul Parks and Recreation Events Calendar (page is a Drupal shell with no server-rendered event data and no discoverable feed/API)
 
-To add a new source, find its RSS/iCal/JSON endpoint (check page source for `rss.php`, `ical_subscribe`, `application/ld+json`, or a `window.__*_DATA__` blob) rather than relying on WebFetch/WebSearch against the rendered page — that's what made earlier runs of this workflow unreliable.
+## Adding a new publisher
+
+Don't just add a human-facing URL to the list above and expect the workflow to scrape it —
+that's what made earlier versions of this workflow unreliable (AI-driven page fetches get
+blocked by anti-bot protection, and the cloud sandbox's own network allowlist blocks arbitrary
+domains too). Instead, find the site's actual structured data endpoint first:
+
+1. **Fetch the raw HTML** of the site's events page with a real browser User-Agent and look for
+   one of these patterns (an AI-summarized fetch tool will often hide these — use `curl` or
+   view-source directly):
+   - `<link rel="alternate" type="application/rss+xml" ... href="...">` — an RSS feed
+   - `ical_subscribe.php` or `rss.php` (common on LibCal-based library calendars)
+   - `gateway.bibliocommons.com/.../rss/events` (BiblioCommons-based library sites — swap in
+     the library system's slug)
+   - `<script type="application/ld+json">` containing `"@type": "Event"` — structured event
+     data embedded directly in the page
+   - `window.__SERVER_DATA__` or similar `window.__*_DATA__` blobs — a JS state object with
+     richer event data (dates, times, venue) than the JSON-LD block
+2. **Test the endpoint directly** (`curl` it, or fetch it in a script) and confirm it returns
+   real event data with a title, date/time, and venue — not an empty shell.
+3. **Add a fetch function** to `scripts/fetch_events.py` following the pattern of
+   `fetch_bibliocommons()` or `fetch_eventbrite()`: parse the endpoint's format, apply
+   `is_kid_event()` / `in_window()` / `passes_time_rule()`, and append to the combined event
+   list in `main()`.
+4. **Update this file** with the new source's structured endpoint URL (not just the human page)
+   and a one-line note on the pattern used.
+5. If no structured endpoint can be found after checking the above, don't add the source — note
+   it under "Removed (unscrapable)" instead, so future edits don't re-attempt it. The
+   environment's network allowlist (see `README.md`) also needs the new domain added, or every
+   fetch will fail with a `403` regardless of how good the endpoint is.

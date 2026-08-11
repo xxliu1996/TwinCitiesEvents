@@ -47,6 +47,10 @@ formatted Markdown digest + summary on top of it.
 - The routine's environment has a network allowlist that must include `gateway.bibliocommons.com`
   and `www.eventbrite.com` (Claude Code cloud sandboxes proxy all outbound traffic through a
   domain allowlist, separate from any target site's own bot-blocking).
-- Git push from the sandbox uses a fine-grained GitHub personal access token (Contents:
-  read/write, scoped to this repo only) embedded directly in the routine's push step, because
-  the sandbox's default git credential proxy did not have write access to this repo.
+- Git push from the sandbox authenticates via the **Claude GitHub App**
+  (https://github.com/apps/claude), installed with `Contents: Read and write` scoped to this
+  repo. This is a full GitHub App installation, not just an OAuth authorization — connecting the
+  general claude.ai connector alone was not sufficient and caused several weeks of silent push
+  failures before the App was properly installed via `github.com/apps/claude`. If pushes start
+  failing again, check `https://github.com/settings/installations` first to confirm the App is
+  still installed with write access before assuming the fetch script broke.

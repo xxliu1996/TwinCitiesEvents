@@ -9,12 +9,17 @@ User-Agent are not.
 [1] Saint Paul Public Library — RSS: https://gateway.bibliocommons.com/v2/libraries/sppl/rss/events (human page: https://sppl.bibliocommons.com/v2/events)
 [2] Ramsey County Library — RSS: https://gateway.bibliocommons.com/v2/libraries/rclreads/rss/events (human page: https://rclreads.bibliocommons.com/v2/events)
 [3] Eventbrite (Minneapolis) — embedded JSON (`window.__SERVER_DATA__`) on: https://www.eventbrite.com/d/mn--minneapolis/events/
+[4] Still Water Events — iCalendar feed: https://events.discoverstillwater.com/wp-json/apollo/v1/calendar/subscribe/all (WordPress "Artsopolis Hub" plugin exposes a full ICS export covering ~800 events; parsed with a minimal stdlib VEVENT parser, no external icalendar library needed)
+[5] Como Zoo Conservatory — REST API (The Events Calendar plugin): https://comozooconservatory.org/wp-json/tribe/events/v1/events (supports `start_date`/`end_date`/`page` params; the site's editorial "Upcoming Events at Como" blog post is a red herring — it's manually written and goes stale, this REST endpoint is the real live calendar)
+[6] Visit Saint Paul — Tempest DMS platform: listing pages at https://www.visitsaintpaul.com/events-calendar/ give event URLs + rough dates (server-rendered `<article>` cards with an `aria-label="From <date>"` badge); each event's detail page has an `application/ld+json` `Event` block with the exact start/end time
+[7] Minneapolis.org — same Tempest DMS platform as [6], listing at https://www.minneapolis.org/calendar/: detail pages often omit `startDate` from JSON-LD, so the fetch script falls back to parsing the page's plain-text "Date Sep 08 7:00 PM" line for the exact time when JSON-LD lacks it
 
-Removed (unscrapable, verified 2026-07-18):
+Removed (unscrapable, verified 2026-07-18 / 2026-09-07):
 - Facebook Events (login-walled, no public listing)
 - Dakota County Library libcal calendar (fully JS-rendered; RSS endpoint exists at /rss.php but returns zero items for the aggregate calendar)
 - Twin Cities AI Tinkerers (direct fetch 403s; no reliable structured endpoint found)
-- Saint Paul Parks and Recreation Events Calendar (page is a Drupal shell with no server-rendered event data and no discoverable feed/API)
+- Saint Paul Parks and Recreation Events Calendar / Como Regional Park page (both are the same Drupal shell with no server-rendered event data and no discoverable feed/API — checked Como Regional Park specifically on 2026-09-07, same result)
+- MSP Mag arts & culture calendar (`mspmag.com/arts-and-culture/calendar`) — has an RSS feed link (`index.rss`) but it's permanently empty; the calendar is a TownNews/BLOX CMS widget with no discoverable JSON API behind it either
 
 ## Adding a new publisher
 

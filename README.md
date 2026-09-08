@@ -8,9 +8,12 @@ without relying on AI-driven web scraping.
 1. **Schedule**: a Claude cloud routine fires every Thursday at 6:30 PM America/Chicago.
 2. **Fetch**: the routine runs [`scripts/fetch_events.py`](scripts/fetch_events.py), a
    deterministic Python script (standard library only) that pulls events directly from each
-   publisher's structured data endpoint — an RSS feed or embedded JSON — rather than scraping
-   rendered HTML pages. See [`EventPulisherList.md`](EventPulisherList.md) for the current
-   source list and why this approach was necessary.
+   publisher's structured data endpoint — an RSS/iCal feed, a REST API, or embedded JSON —
+   rather than scraping rendered HTML pages. Currently covers two library systems (BiblioCommons
+   RSS), Eventbrite (Minneapolis), Still Water Events (iCal), Como Zoo Conservatory (REST API),
+   and Visit Saint Paul / Minneapolis.org (a shared Tempest DMS platform, listing pages +
+   per-event JSON-LD). See [`EventPulisherList.md`](EventPulisherList.md) for the full source
+   list, exact endpoints, and why this approach was necessary.
 3. **Filter**: the script applies three rules to every event:
    - **Adult-oriented** — excludes events with kids/family/teen keywords in the title or
      description (storytime, STEAM Saturday, family fun, etc.)
@@ -44,9 +47,13 @@ formatted Markdown digest + summary on top of it.
 
 ## Notes on the cloud routine setup
 
-- The routine's environment has a network allowlist that must include `gateway.bibliocommons.com`
-  and `www.eventbrite.com` (Claude Code cloud sandboxes proxy all outbound traffic through a
-  domain allowlist, separate from any target site's own bot-blocking).
+- The routine's environment has a network allowlist that must include every domain
+  `scripts/fetch_events.py` calls: `gateway.bibliocommons.com`, `www.eventbrite.com`,
+  `events.discoverstillwater.com`, `comozooconservatory.org`, `www.visitsaintpaul.com`, and
+  `www.minneapolis.org` (Claude Code cloud sandboxes proxy all outbound traffic through a domain
+  allowlist, separate from any target site's own bot-blocking). Adding a new source to the
+  script means adding its domain here too, or it will fail with a `403` from the sandbox itself
+  regardless of how good the endpoint is.
 - Git push from the sandbox authenticates via the **Claude GitHub App**
   (https://github.com/apps/claude), installed with `Contents: Read and write` scoped to this
   repo. This is a full GitHub App installation, not just an OAuth authorization — connecting the

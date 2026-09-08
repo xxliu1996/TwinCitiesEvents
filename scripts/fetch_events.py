@@ -280,12 +280,20 @@ def fetch_dms_event_detail(url, rough_date):
 
     def real_venue(title, json_ld_venue):
         # This DMS platform's JSON-LD often sets location.name to the event
-        # title itself (bogus placeholder) instead of a real venue. Prefer
-        # the plain-text "Event Location <name>" block when that happens.
+        # title itself (bogus placeholder) instead of a real venue. The
+        # venue's own "Website >" link carries the real name in a
+        # data-dms-partner-name attribute (visitsaintpaul.com structure);
+        # minneapolis.org instead has a plain-text "Event Location <name>"
+        # block. Try both before falling back to JSON-LD/bogus.
+        m = re.search(r'data-dms-partner-listing-website-click[^>]*data-dms-partner-id="\d+"\s*data-dms-partner-name="([^"]+)"', html)
+        if m:
+            return m.group(1).strip()
+        m = re.search(r"Event Location\s+(.+?)\s+(?:Contact|Address|Buy Tickets|Details)", text)
+        if m:
+            return m.group(1).strip()
         if json_ld_venue and json_ld_venue.strip().lower() != title.strip().lower():
             return json_ld_venue
-        m = re.search(r"Event Location\s+(.+?)\s+(?:Contact|Address|Buy Tickets|Details)", text)
-        return m.group(1).strip() if m else json_ld_venue
+        return ""
 
     if node and node.get("startDate"):
         try:
